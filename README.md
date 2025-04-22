@@ -1,9 +1,9 @@
 LearnWebGPU - Code
 ==================
 
-This repository contains the reference code base accompanying the [Learn WebGPU](learnwgpu.com) web book.
+This repository contains the reference code base accompanying the [Learn WebGPU](https://eliemichel.github.io/LearnWebGPU/) web book.
 
-Branch `step090`: This corresponds to the code at the end of the page [Camera control](http://localhost:8000/basic-3d-rendering/some-interaction/camera-control.html).
+Branch `step032`: This corresponds to the code at the end of the page [A first Vertex Attribute](https://eliemichel.github.io/LearnWebGPU/basic-3d-rendering/input-geometry/a-first-vertex-attribute.html).
 
 Building
 --------

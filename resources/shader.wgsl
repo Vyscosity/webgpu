@@ -1,48 +1,58 @@
+/**
+ * A structure with fields labeled with vertex attribute locations can be used
+ * as input to the entry point of a shader.
+ */
 struct VertexInput {
-	@location(0) position: vec3f,
-	@location(1) normal: vec3f,
-	@location(2) color: vec3f,
-	@location(3) uv: vec2f,
+	@location(0) position: vec2f,
+	@location(1) color: vec3f,
 };
 
+/**
+ * A structure with fields labeled with builtins and locations can also be used
+ * as *output* of the vertex shader, which is also the input of the fragment
+ * shader.
+ */
 struct VertexOutput {
 	@builtin(position) position: vec4f,
+	// The location here does not refer to a vertex attribute, it just means
+	// that this field must be handled by the rasterizer.
+	// (It can also refer to another field of another struct that would be used
+	// as input to the fragment shader.)
 	@location(0) color: vec3f,
-	@location(1) normal: vec3f,
-	@location(2) uv: vec2f,
 };
 
 /**
  * A structure holding the value of our uniforms
  */
 struct MyUniforms {
-    projectionMatrix: mat4x4f,
-    viewMatrix: mat4x4f,
-    modelMatrix: mat4x4f,
-    color: vec4f,
+    color: vec4f, // <-- this is first! Because it is bigger than 'time'
     time: f32,
 };
 
+// Instead of the simple uTime variable, our uniform variable is a struct
 @group(0) @binding(0) var<uniform> uMyUniforms: MyUniforms;
-@group(0) @binding(1) var gradientTexture: texture_2d<f32>;
-@group(0) @binding(2) var textureSampler: sampler;
 
 @vertex
 fn vs_main(in: VertexInput) -> VertexOutput {
-	var out: VertexOutput;
-	out.position = uMyUniforms.projectionMatrix * uMyUniforms.viewMatrix * uMyUniforms.modelMatrix * vec4f(in.position, 1.0);
-    out.normal = (uMyUniforms.modelMatrix * vec4f(in.normal, 0.0)).xyz;
-	out.color = in.color;
-	out.uv = in.uv;
-	return out;
+    var out: VertexOutput;
+    let ratio = 640.0 / 480.0;
+
+    // We now move the scene depending on the time!
+    var offset = vec2f(-0.6875, -0.463);
+    offset += 0.3 * vec2f(cos(uMyUniforms.time), sin(uMyUniforms.time));
+
+    out.position = vec4f(in.position.x + offset.x, (in.position.y + offset.y) * ratio, 0.0, 1.0);
+    out.color = in.color;
+    return out;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-	// Get data from the texture using our new sampler
-	let color = textureSample(gradientTexture, textureSampler, in.uv).rgb;
+	// We multiply the scene's color with our global uniform (this is one
+    // possible use of the color uniform, among many others).
+    let color = in.color * uMyUniforms.color.rgb;
 
 	// Gamma-correction
-	let corrected_color = pow(color, vec3f(2.2));
-	return vec4f(corrected_color, uMyUniforms.color.a);
+    let linear_color = pow(color, vec3f(2.2));
+    return vec4f(linear_color, 1.0);
 }
